@@ -1,0 +1,90 @@
+﻿@page "/qg"
+
+@using Blazor_QuickGrid.Models
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+<h3>QG_EditTemplate</h3>
+
+<QuickGrid Items="@products">
+    @if (!canEdit)
+    {
+        <PropertyColumn Property="@(p => p.Id)" Title="ID" />
+        <PropertyColumn Property="@(p => p.Name)" Title="Name" />
+        <PropertyColumn Property="@(p => p.Price)" Title="Price" />
+        <TemplateColumn Context="product">
+            <button @onclick="() => EditProduct(product)">Edit</button>
+        </TemplateColumn>
+    }
+    @if (canEdit)
+    {
+        <TemplateColumn Context="product">
+
+            <EditTemplate>
+                <input @bind="product.Name" />
+            </EditTemplate>
+   
+
+    </TemplateColumn> 
+    <TemplateColumn Context="product">
+      
+            <EditTemplate>
+                <input @bind="product.Price" />
+            </EditTemplate>
+         
+
+    </TemplateColumn>
+    <TemplateColumn Context="product">
+        
+            <EditTemplate>
+                <button @onclick="() => SaveProduct(product)">Save</button>
+                <button @onclick="() => CancelEdit(product)">Cancel</button>
+            </EditTemplate>
+        
+   
+    </TemplateColumn>
+    }
+</QuickGrid>
+
+@code {
+    private IQueryable<Product> products;
+    private HashSet<int> editingProductIds = new HashSet<int>();
+    private bool canEdit = false;
+
+    protected override void OnInitialized()
+    {
+        var pd = new List<Product>()
+        {
+            new Product() { Id=1, Name="P1", Price=1111 },
+            new Product() { Id=2, Name="P2", Price=2111 },
+            new Product() { Id=3, Name="P3", Price=3111 },
+            new Product() { Id=4, Name="P4", Price=4111 },
+            new Product() { Id=5, Name="P5", Price=5111 }
+        };
+
+        products = pd.AsQueryable();
+    }
+
+    private void EditProduct(Product product)
+    {
+        canEdit = !canEdit;
+        editingProductIds.Add(product.Id);
+    }
+
+    private void SaveProduct(Product product)
+    {
+        editingProductIds.Remove(product.Id);
+        canEdit = false;
+        // Logic to save the edited product
+    }
+
+    private void CancelEdit(Product product)
+    {
+        editingProductIds.Remove(product.Id);
+        // Logic to revert changes if necessary
+    }
+
+    private bool IsEditing(Product product)
+    {
+        return editingProductIds.Contains(product.Id);
+    }
+}

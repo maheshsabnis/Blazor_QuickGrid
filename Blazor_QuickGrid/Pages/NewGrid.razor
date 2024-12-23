@@ -1,0 +1,82 @@
+﻿@page "/newgrid"
+@using System.Collections.Generic
+
+<h3>DataGrid with Inline Edit and Delete</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Items)
+        {
+            <tr>
+                @if (editIndex == Items.IndexOf(item))
+                {
+                    <td><input @bind="item.Name" /></td>
+                    <td><input @bind="item.Age" type="number" /></td>
+                    <td>
+                        <button @onclick="() => SaveItem(item)">Save</button>
+                        <button @onclick="CancelEdit">Cancel</button>
+                    </td>
+                }
+                else
+                {
+                    <td>@item.Name</td>
+                    <td>@item.Age</td>
+                    <td>
+                        <button @onclick="() => EditItem(item)">Edit</button>
+                        <button @onclick="() => DeleteItem(item)">Delete</button>
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button @onclick="AddNewItem">Add New Item</button>
+
+@code {
+    private List<Item> Items = new List<Item>
+    {
+        new Item { Name = "John Doe", Age = 30 },
+        new Item { Name = "Jane Smith", Age = 25 }
+    };
+
+    private int editIndex = -1;
+
+    private void EditItem(Item item)
+    {
+        editIndex = Items.IndexOf(item);
+    }
+
+    private void SaveItem(Item item)
+    {
+        editIndex = -1;
+    }
+
+    private void CancelEdit()
+    {
+        editIndex = -1;
+    }
+
+    private void DeleteItem(Item item)
+    {
+        Items.Remove(item);
+    }
+
+    private void AddNewItem()
+    {
+        Items.Add(new Item { Name = "New Item", Age = 0 });
+    }
+
+    public class Item
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+}

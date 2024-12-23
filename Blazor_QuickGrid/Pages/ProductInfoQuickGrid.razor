@@ -1,0 +1,181 @@
+﻿@page "/quickcrud"
+
+@using Blazor_QuickGrid.Models
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject ProductService serv;
+
+<h3>Using QuickGrid in Blazor With Inline Operations</h3>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>
+                <button class="btn btn-dark"
+                @onclick="()=>AddNewRecord()">Add</button>
+            </th> 
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <QuickGrid Items="products" class="table table-bordered table-striped table-warning table-hover" Pagination="pagination">
+                    @if (!canEdit)
+                    {
+                        <PropertyColumn Property="@(p=>p.ProductRecordId)" Title="Product Record Id" />
+                        <PropertyColumn Property="@(p=>p.ProductId)" Title="Product Id" />
+                        <PropertyColumn Property="@(p=>p.ProductName)" Title="Product Name" />
+                        <PropertyColumn Property="@(p=>p.CategoryName)" Title="Category Name" />
+                        <PropertyColumn Property="@(p=>p.Description)" Title="Description" />
+                        <PropertyColumn Property="@(p=>p.UnitPrice)" Title="Unit Price" />
+                        <TemplateColumn Context="product">
+                            <button @onclick="()=>EditRecord(product)">Edit</button>
+                            <button @onclick="()=>Delete(product)">Delete</button>
+                        </TemplateColumn>
+                    }
+                    else
+                    {
+                        <PropertyColumn Property="@(p=>p.ProductRecordId)" Title="Product Record Id" />
+                        <PropertyColumn Property="@(p=>p.ProductId)" Title="Product  Id" />
+                        <TemplateColumn Context="product">
+                            @if (editId == product.ProductId)
+                            {
+                               <InputText @bind-Value="product.ProductName"/>
+                            }
+                            else
+                            {
+                                @product.ProductName
+                            }
+                        </TemplateColumn>
+                        <TemplateColumn Context="product">
+                            @if (editId == product.ProductId)
+                            {
+                                <InputText @bind-Value="product.CategoryName" />
+                            }
+                            else
+                            {
+                                @product.CategoryName
+                            }
+                        </TemplateColumn>
+                        <TemplateColumn Context="product">
+                            @if (editId == product.ProductId)
+                            {
+                                <InputText @bind-Value="product.Description" />
+                            }
+                            else
+                            {
+                                @product.Description
+                            }
+                        </TemplateColumn>
+                        <TemplateColumn Context="product">
+                            @if (editId == product.ProductId)
+                            {
+                                <InputNumber @bind-Value="product.UnitPrice" />
+                            }
+                            else
+                            {
+                                @product.UnitPrice
+                            }
+                        </TemplateColumn>
+                        <TemplateColumn Context="product">
+                            @if (editId == product.ProductId)
+                            {
+                                <button class="btn btn-success" @onclick="()=>Save(product)">Save</button>
+                                <button class="btn btn-warning" @onclick="()=>CancelEditRecord()">Cancel</button>
+                            }
+
+                        </TemplateColumn>
+
+                    }
+                </QuickGrid>
+                <Paginator State="pagination" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+@code {
+    private IQueryable<ProductInfo> products;
+    private string editId = string.Empty;
+    private bool canEdit = false;
+    private bool isNew = false;
+    private int NewRecordIndex = 0;
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        // return base.OnInitializedAsync();
+    }
+
+    private async Task LoadData()
+    { 
+        products = await serv.GetAsync();
+    }
+    /// <summary>
+    /// Make the Row (and Hence Record Editable)
+    /// </summary>
+    /// <param name="product"></param>
+    private void EditRecord(ProductInfo product)
+    {
+        editId = product.ProductId;
+        canEdit = true;
+    }
+
+    private void CancelEditRecord()
+    {
+        editId = string.Empty;
+        canEdit = false;
+    }
+
+    /// <summary>
+    /// Method to Add/Edit the Record
+    /// </summary>
+    /// <param name="product"></param>
+    /// <returns></returns>
+    private async Task Save(ProductInfo product)
+    {
+        // Add New Record
+        if (isNew && NewRecordIndex >0)
+        {
+            await serv.PostAsync(product);
+        }
+        // Update an Existing Record
+        if(canEdit && NewRecordIndex == 0)
+        {
+            await serv.PutAsync(editId, product);
+        }
+        editId = string.Empty;
+        canEdit = false;
+        isNew = false;
+        NewRecordIndex = 0;
+        await LoadData();
+    }
+    /// <summary>
+    /// Delete the Record
+    /// </summary>
+    /// <param name="product"></param>
+    /// <returns></returns>
+    private async Task Delete(ProductInfo product)
+    {
+        await serv.DeleteAsync(product.ProductId);
+        await LoadData();
+    }
+
+    /// <summary>
+    /// Method to Generate teh ProductId from the Last Value of ProductId
+    /// This method will also set the NewRecordIndex to specify the Index of the
+    /// New reocrd to be added in the QuickGrid
+    /// </summary>
+    private void AddNewRecord() 
+    {
+        List<ProductInfo> prds = products.ToList();
+        var prodId = (Convert.ToInt32(prds.Last().ProductId.Split('-')[1]) + 1).ToString();
+        prodId = $"Prod-000{prodId}";
+        prds.Add(new ProductInfo() {ProductId = prodId,ProductName=string.Empty,CategoryName=string.Empty,Description=string.Empty, UnitPrice = 0 });
+        products = prds.AsQueryable();
+        NewRecordIndex = products.Count();
+        isNew = true;
+    }
+
+}

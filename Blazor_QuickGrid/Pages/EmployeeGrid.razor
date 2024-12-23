@@ -1,0 +1,124 @@
+﻿@page "/empqg"
+
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Blazor_QuickGrid.Models
+
+
+<h3>EmployeeGrid</h3>
+
+<div class="container">
+    <QuickGrid TItem="Employee" Items="@empsdb" PageSize="5" ShowPager="true" Class="table table-bordered table-striped table-hover" Pagination="pagination">
+
+          @* <Columns>
+              <QuickGridTextColumn Field="@nameof(Employee.EmployeeId)" Title="Employee Id" />
+              <QuickGridTextColumn Field="@nameof(Employee.EmployeeName)" Title="Employee Name" />
+              <QuickGridTextColumn Field="@nameof(Employee.Department)" Title="Department" />
+              <QuickGridTextColumn Field="@nameof(Employee.Designation)" Title="Designation" />
+              <QuickGridTextColumn Field="@nameof(Employee.Email)" Title="Email" />
+              <QuickGridTextColumn Field="@nameof(Employee.Phone)" Title="Phone Number" />
+              <QuickGridTextColumn Field="@nameof(Employee.Salary)" Title="Salary" />
+             
+          </Columns>    *@
+          
+            <PropertyColumn Property="@(p=>p.EmployeeId)" Title="Employee Id"/>
+
+        <TemplateColumn >
+            <div>
+                @if (IsEditing)
+                {
+                    <input type="text" @bind="context.EmployeeName"/>
+                }
+                else
+                {
+                    <div>@context.EmployeeName</div>
+                }
+            </div>
+        </TemplateColumn>
+
+            <PropertyColumn Property="@(p=>p.EmployeeName)" Title="Employee Name"  />
+            <PropertyColumn Property="@(p=>p.Department)" Title="Department" />
+            <PropertyColumn Property="@(p=>p.Designation)" Title="Designation" />
+            <PropertyColumn Property="@(p=>p.Email)" Title="Email" />
+            <PropertyColumn Property="@(p=>p.Phone)" Title="Phone" />
+            <PropertyColumn Property="@(p=>p.Salary)" Title="Salary"  />
+
+             
+        <TemplateColumn>
+            @if (!IsEditing)
+            {
+                <button @onclick="() => OnEditButtonClick()">
+                    Edit
+                </button>
+            }
+            else
+            {
+                <button @onclick="() => OnSaveButtonClick(context)">
+                    Save"
+                </button>
+                <button @onclick="() => OnCancelButtonClick()">
+                    Cancel
+                </button>
+            }
+            
+        </TemplateColumn>
+            
+
+      </QuickGrid>
+    <Paginator State="pagination" />
+</div>
+
+
+
+@code {
+    public List<Employee>? Employees { get; set; }
+    public IQueryable<Employee>? empsdb { get; set; }
+
+    private int editIndex = -1;
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+
+    bool IsEditing = false;
+
+    protected override void OnInitialized()
+    {
+        Employees = new List<Employee>();
+
+        /*  Generate code for Initial Values in Employees */
+        for (int i = 1; i <= 100; i++)
+        {
+            Employee emp = new Employee();
+            emp.EmployeeId = i;
+            emp.EmployeeName = "Employee " + i;
+            emp.Department = "Department " + i;
+            emp.Designation = "Designation " + i;
+            emp.Email = "Employee" + i + "@gmail.com";
+            emp.Phone = "1234567890";
+            emp.Salary = 10000 + i * 1000;
+            ((List<Employee>)Employees).Add(emp);
+        }
+
+          empsdb = Employees.AsQueryable();
+
+        base.OnInitialized();
+    }
+
+    private void OnRowClick(Employee item)
+    {
+        // Handle the row click event
+        Console.WriteLine($"Row clicked: {item.EmployeeName}");
+    }
+
+
+    private void OnEditButtonClick()
+    {
+        IsEditing = true;
+    }
+    private void OnSaveButtonClick(Employee emp)
+    {
+        IsEditing = true;
+    }
+    private void OnCancelButtonClick()
+    {
+        IsEditing = false;
+    }
+}
